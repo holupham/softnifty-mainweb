@@ -21,42 +21,60 @@ class SlideshowManager {
     }
 
     createSlides() {
-        // Create slide data
+        // Create slide data with enhanced backgrounds
         this.slides = [
             {
                 title: "Unleash Innovation Together",
-                subtitle: "Transform your business with cutting-edge technology solutions",
+                subtitle: "Transform your business with cutting-edge technology solutions that drive unprecedented growth",
                 background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                icon: "fas fa-rocket"
+                image: "assets/images/slide_01.png"
             },
             {
                 title: "AI-Powered Solutions",
-                subtitle: "Harness artificial intelligence to drive unprecedented growth",
+                subtitle: "Harness artificial intelligence to drive unprecedented growth and competitive advantage",
                 background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-                icon: "fas fa-robot"
+                image: "assets/images/slide_02.png"
             },
             {
                 title: "Cloud Infrastructure",
-                subtitle: "Scalable and secure cloud solutions for modern businesses",
+                subtitle: "Scalable and secure cloud solutions for modern businesses and digital transformation",
                 background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-                icon: "fas fa-cloud"
+                image: "assets/images/slide_03.png"
             },
             {
                 title: "Digital Transformation",
-                subtitle: "Complete modernization of your business operations",
+                subtitle: "Complete modernization of your business operations with cutting-edge technology",
                 background: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
-                icon: "fas fa-sync-alt"
+                image: "assets/images/slide_04.png"
             },
             {
                 title: "Expert Consultation",
-                subtitle: "Strategic guidance from industry-leading professionals",
+                subtitle: "Strategic guidance from industry-leading professionals and technology experts",
                 background: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
-                icon: "fas fa-users"
+                image: "assets/images/slide_05.png"
             }
         ];
 
+        // Preload images for better performance
+        this.preloadImages();
+
         // Update hero section with first slide
         this.updateHeroContent(0);
+    }
+
+    preloadImages() {
+        this.slides.forEach((slide, index) => {
+            const img = new Image();
+            img.onload = () => {
+                console.log(`Slide ${index + 1} image loaded successfully`);
+            };
+            img.onerror = () => {
+                console.warn(`Failed to load slide ${index + 1} image: ${slide.image}`);
+                // Use a fallback gradient background
+                slide.fallback = true;
+            };
+            img.src = slide.image;
+        });
     }
 
     setupDots() {
@@ -170,31 +188,60 @@ class SlideshowManager {
         const heroSection = document.querySelector('#home');
         const title = heroSection.querySelector('h1');
         const subtitle = heroSection.querySelector('p');
-        const heroImage = heroSection.querySelector('.hero-image-container > div');
-        const icon = heroImage.querySelector('i');
+        const heroImageContainer = heroSection.querySelector('.hero-image-container');
 
-        if (title && subtitle && heroImage && icon) {
+        if (title && subtitle && heroImageContainer) {
             // Apply transition effect
             const transition = this.transitions[slideIndex];
             this.applyTransition(heroSection, transition);
 
-            // Update content
+            // Update content with enhanced styling
             setTimeout(() => {
-                title.innerHTML = slide.title.split(' ').map((word, index) => {
-                    if (index === slide.title.split(' ').length - 1) {
-                        return `<span class="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">${word}</span>`;
+                // Enhanced title with gradient effect on last word
+                const words = slide.title.split(' ');
+                const lastWordIndex = words.length - 1;
+                title.innerHTML = words.map((word, index) => {
+                    if (index === lastWordIndex) {
+                        return `<span class="gradient-text">${word}</span>`;
                     }
                     return word;
                 }).join(' ');
-                
+
                 subtitle.textContent = slide.subtitle;
-                heroImage.style.background = slide.background;
-                icon.className = `${slide.icon} text-8xl text-white opacity-80`;
+
+                // Enhanced image loading with fallback
+                if (slide.fallback) {
+                    // Use gradient background as fallback
+                    heroImageContainer.innerHTML = `
+                        <div class="w-full h-full flex items-center justify-center" style="background: ${slide.background}">
+                            <i class="fas fa-laptop-code text-8xl text-white opacity-60"></i>
+                        </div>
+                    `;
+                } else {
+                    // Load actual image
+                    heroImageContainer.innerHTML = `
+                        <img src="${slide.image}"
+                             alt="${slide.title}"
+                             class="slideshow-image w-full h-full object-cover object-top-right"
+                             style="opacity: 0; transition: opacity 0.5s ease-in-out;"
+                             onload="this.style.opacity='0.7'; this.classList.add('loaded')"
+                             onerror="this.parentElement.innerHTML='<div class=\\'w-full h-full flex items-center justify-center\\' style=\\'background: ${slide.background}\\'><i class=\\'fas fa-laptop-code text-8xl text-white opacity-60\\'></i></div>'">
+                    `;
+                }
             }, 250);
         }
 
-        // Update background
-        heroSection.style.background = slide.background;
+        // Update background with enhanced gradient and overlay
+        if (heroSection) {
+            heroSection.style.background = slide.background;
+            // Add subtle overlay for better text contrast
+            const overlay = heroSection.querySelector('.hero-overlay') || document.createElement('div');
+            if (!heroSection.querySelector('.hero-overlay')) {
+                overlay.className = 'hero-overlay absolute inset-0 bg-black bg-opacity-20 pointer-events-none';
+                overlay.style.zIndex = '5';
+                heroSection.appendChild(overlay);
+            }
+        }
     }
 
     applyTransition(element, transition) {
@@ -373,13 +420,13 @@ class AnimationObserver {
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    window.slideshowManager = new SlideshowManager();
-    window.animationObserver = new AnimationObserver();
-    
+    const slideshowManager = new SlideshowManager();
+    const animationObserver = new AnimationObserver();
+
     // Handle page visibility changes
     document.addEventListener('visibilitychange', () => {
-        if (window.slideshowManager) {
-            window.slideshowManager.handleVisibilityChange();
+        if (slideshowManager) {
+            slideshowManager.handleVisibilityChange();
         }
     });
 });
