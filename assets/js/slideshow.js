@@ -12,12 +12,33 @@ class SlideshowManager {
     }
 
     init() {
+        // Clean up any existing slideshow elements
+        this.cleanup();
+
         this.createSlides();
         this.setupDots();
         this.setupControls();
         this.startAutoPlay();
         this.setupKeyboardControls();
         this.setupTouchControls();
+    }
+
+    cleanup() {
+        // Remove existing indicators
+        const existingIndicators = document.querySelector('.slideshow-indicators');
+        if (existingIndicators) {
+            existingIndicators.remove();
+        }
+
+        // Remove existing navigation buttons
+        const existingNavBtns = document.querySelectorAll('.slideshow-nav-btn');
+        existingNavBtns.forEach(btn => btn.remove());
+
+        // Remove old slideshow dots container
+        const oldDotsContainer = document.querySelector('.absolute.bottom-8');
+        if (oldDotsContainer) {
+            oldDotsContainer.innerHTML = '';
+        }
     }
 
     createSlides() {
@@ -78,56 +99,58 @@ class SlideshowManager {
     }
 
     setupDots() {
-        const dotsContainer = document.querySelector('.absolute.bottom-8');
-        if (!dotsContainer) return;
+        // Remove existing indicators container
+        const existingContainer = document.querySelector('.slideshow-indicators');
+        if (existingContainer) {
+            existingContainer.remove();
+        }
 
-        // Clear existing dots
-        dotsContainer.innerHTML = '';
-        
-        // Create dots container
-        const dotsWrapper = document.createElement('div');
-        dotsWrapper.className = 'flex space-x-3';
-        
+        // Create new scrolling indicators container
+        const indicatorsContainer = document.createElement('div');
+        indicatorsContainer.className = 'slideshow-indicators';
+
         // Create dots
         for (let i = 0; i < this.totalSlides; i++) {
             const dot = document.createElement('button');
-            dot.className = `slideshow-dot w-3 h-3 rounded-full transition-all duration-300 ${i === 0 ? 'bg-white scale-125' : 'bg-white/50'}`;
+            dot.className = `slideshow-dot ${i === 0 ? 'active' : ''}`;
             dot.setAttribute('data-slide', i);
+            dot.setAttribute('aria-label', `Go to slide ${i + 1}`);
             dot.addEventListener('click', () => this.goToSlide(i));
-            dotsWrapper.appendChild(dot);
+            indicatorsContainer.appendChild(dot);
         }
-        
-        dotsContainer.appendChild(dotsWrapper);
+
+        // Append to hero section instead of body for scrolling behavior
+        const heroSection = document.querySelector('#home');
+        if (heroSection) {
+            heroSection.appendChild(indicatorsContainer);
+        }
     }
 
     setupControls() {
-        // Create navigation arrows
+        // Remove existing controls
+        const existingControls = document.querySelectorAll('.slideshow-nav-btn');
+        existingControls.forEach(control => control.remove());
+
         const heroSection = document.querySelector('#home');
         if (!heroSection) return;
 
-        // Previous button
+        // Previous button with improved styling
         const prevBtn = document.createElement('button');
-        prevBtn.className = 'absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-3 rounded-full transition-all duration-300 z-10';
+        prevBtn.className = 'slideshow-nav-btn prev';
         prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+        prevBtn.setAttribute('aria-label', 'Previous slide');
         prevBtn.addEventListener('click', () => this.previousSlide());
-        
-        // Next button
+
+        // Next button with improved styling
         const nextBtn = document.createElement('button');
-        nextBtn.className = 'absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-3 rounded-full transition-all duration-300 z-10';
+        nextBtn.className = 'slideshow-nav-btn next';
         nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+        nextBtn.setAttribute('aria-label', 'Next slide');
         nextBtn.addEventListener('click', () => this.nextSlide());
-        
+
+        // Append buttons to hero section
         heroSection.appendChild(prevBtn);
         heroSection.appendChild(nextBtn);
-
-        // Play/Pause button
-        const playPauseBtn = document.createElement('button');
-        playPauseBtn.className = 'absolute top-4 right-4 bg-white/20 hover:bg-white/30 text-white p-3 rounded-full transition-all duration-300 z-10';
-        playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
-        playPauseBtn.addEventListener('click', () => this.toggleAutoPlay());
-        playPauseBtn.id = 'slideshow-play-pause';
-        
-        heroSection.appendChild(playPauseBtn);
     }
 
     setupKeyboardControls() {
@@ -301,10 +324,9 @@ class SlideshowManager {
     updateDots() {
         const dots = document.querySelectorAll('.slideshow-dot');
         dots.forEach((dot, index) => {
+            dot.classList.remove('active');
             if (index === this.currentSlide) {
-                dot.className = 'slideshow-dot w-3 h-3 rounded-full bg-white scale-125 transition-all duration-300';
-            } else {
-                dot.className = 'slideshow-dot w-3 h-3 rounded-full bg-white/50 transition-all duration-300';
+                dot.classList.add('active');
             }
         });
     }
